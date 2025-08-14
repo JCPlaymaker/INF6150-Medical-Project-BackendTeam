@@ -1,0 +1,74 @@
+[
+    {
+        "history_id": "e7285b2d-e775-40bf-9570-7db47dc8efa2",
+        "patient_id": "INS123456",
+        "diagnostic": "Hypertension",
+        "treatment": "Medication A",
+        "doctor_id": "2d3cfc26-4958-4723-acf8-9799502c4d7d",
+        "start_date": "2022-01-15",
+        "end_date": "2022-06-15"
+    },
+    {
+        "history_id": "4ee5ee51-6549-4777-be4f-4224b8c1c5d6",
+        "patient_id": "INS123456",
+        "diagnostic": "Diabetes",
+        "treatment": "Medication B",
+        "doctor_id": "aa57295e-fa4f-4821-b04c-711ea0be487a",
+        "start_date": "2023-03-10",
+        "end_date": "2023-09-10"
+    },
+    {
+        "history_id": "018e934c-a170-432d-9781-64e77e35a21c",
+        "patient_id": "INS654321",
+        "diagnostic": "Asthma",
+        "treatment": "Inhaler",
+        "doctor_id": "2d3cfc26-4958-4723-acf8-9799502c4d7d",
+        "start_date": "2023-01-10",
+        "end_date": "2023-02-10"
+    },
+    {
+        "history_id": "01499623-f686-46fa-9e52-d976e2d17b61",
+        "patient_id": "INS654321",
+        "diagnostic": "Allergy",
+        "treatment": "Antihistamines",
+        "doctor_id": "aa57295e-fa4f-4821-b04c-711ea0be487a",
+        "start_date": "2023-04-05",
+        "end_date": "2023-07-05"
+    },
+    {
+        "history_id": "386d8ce9-506c-4554-b11a-5fa64bdf9cfe",
+        "patient_id": "INS789012",
+        "diagnostic": "Migraine",
+        "treatment": "Pain Reliever",
+        "doctor_id": "31870799-6214-4639-a6a8-412f8e3bb232",
+        "start_date": "2023-05-20",
+        "end_date": "2023-06-20"
+    },
+    {
+        "history_id": "2dbe3ad3-fa81-4f8c-ae83-1d1217dd978f",
+        "patient_id": "INS789012",
+        "diagnostic": "Back Pain",
+        "treatment": "Physiotherapy",
+        "doctor_id": "4730136a-8c45-4968-ae61-25efa7601262",
+        "start_date": "2023-07-15",
+        "end_date": "2023-12-15"
+    },
+    {
+        "history_id": "877b310b-8b96-4864-829e-6cc3c027209b",
+        "patient_id": "INS345678",
+        "diagnostic": "Anemia",
+        "treatment": "Iron Supplements",
+        "doctor_id": "31870799-6214-4639-a6a8-412f8e3bb232",
+        "start_date": "2023-02-25",
+        "end_date": "2023-08-25"
+    },
+    {
+        "history_id": "634cdb47-68b5-4a99-80fe-5f286d4742d7",
+        "patient_id": "INS345678",
+        "diagnostic": "Thyroid Disorder",
+        "treatment": "Hormone Therapy",
+        "doctor_id": "4730136a-8c45-4968-ae61-25efa7601262",
+        "start_date": "2023-09-10",
+        "end_date": "2024-03-10"
+    }
+]

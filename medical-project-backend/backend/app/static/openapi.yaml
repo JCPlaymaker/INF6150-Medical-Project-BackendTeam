@@ -1,0 +1,3560 @@
+openapi: 3.1.0
+info:
+  title: Patient Management API
+  version: "1.2.0"
+  description: >
+    API for managing patients, including creating new patients, updating existing patient records (with version history), medical history, medical visits, and retrieving detailed patient information.
+servers:
+  - url: https://8dj6t53su8wv.share.zrok.io
+    description: Local development server
+
+tags:
+  - name: Patients
+    description: Operations related to patients
+  - name: Authentication
+    description: Operations related to authentication
+  - name: Users
+    description: Operations related to users management
+  - name: Medical History
+    description: Operations related to patient medical history
+  - name: Medical Visits
+    description: Operations related to patient medical visits
+  - name: Coordinates
+    description: Operations related to user coordinates/addresses
+  - name: Parents
+    description: Operations related to parent-child relationships
+
+paths:
+  /api/patients:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Patients
+      summary: Add a New Patient
+      description: >
+        Creates a new patient along with the associated user information and addresses.
+        Optionally, parent-child relationships can be established if `parent_ids` are provided.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientCreate'
+            examples:
+              Example1:
+                summary: Sample Patient Creation
+                value:
+                  login: "johndoe"
+                  password: "mysecretpassword"  # Plain text password
+                  user_type: "PATIENT"
+                  first_name: "John"
+                  last_name: "Doe"
+                  phone_number: "123-456-7890"
+                  email: "john.doe@example.com"
+                  medical_insurance_id: "INS123456"
+                  gender: "Male"
+                  city_of_birth: "Anytown"
+                  date_of_birth: "2003-05-19"
+                  coordinates:
+                    - street_address: "123 Main St"
+                      apartment: "Apt 4B"
+                      postal_code: "12345"
+                      city: "Anytown"
+                      country: "USA"
+                    - street_address: "555 Maple Ave"
+                      apartment: "Floor 3"
+                      postal_code: "11223"
+                      city: "Anytown"
+                      country: "USA"
+                  parent_ids:
+                    - "99febb18-8a4c-40b6-942f-df3c60d522dd"
+                    - "eb711323-52d6-40a8-b335-8b3e587ed009"
+      responses:
+        '201':
+          description: Patient created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientCreateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Patient Creation
+                  value:
+                    user_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ValidationError:
+                  summary: Validation Error
+                  value:
+                    error: "Validation error details..."
+                ForeignKeyViolation:
+                  summary: Foreign Key Violation
+                  value:
+                    error: "Invalid foreign key reference."
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ServerError:
+                  summary: Unexpected Server Error
+                  value:
+                    error: "An unexpected error occurred."
+
+  /api/patients/{medical_insurance_id}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Patients
+      summary: Retrieve a Patient by Medical Insurance ID
+      description: >
+        Retrieves detailed information about a patient identified by their `medical_insurance_id`.
+        The response includes flattened user details, addresses, medical history, medical visits, and parent relationships.
+      parameters:
+        - in: path
+          name: medical_insurance_id
+          required: true
+          schema:
+            type: string
+            example: "INS123456"
+          description: The medical insurance ID of the patient to retrieve.
+      responses:
+        '200':
+          description: Patient retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Patient Retrieval
+                  value:
+                    user_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    login: "johndoe"
+                    user_type: "PATIENT"
+                    first_name: "John"
+                    last_name: "Doe"
+                    phone_number: "123-456-7890"
+                    email: "john.doe@example.com"
+                    medical_insurance_id: "INS123456"
+                    gender: "Male"
+                    city_of_birth: "Anytown"
+                    date_of_birth: "Sat, 15 Jul 1995 00:00:00 GMT"
+                    created_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                    modified_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                    coordinates:
+                      - id: "11111111-2222-3333-4444-555555555555"
+                        street_address: "123 Main St"
+                        apartment: "Apt 4B"
+                        postal_code: "12345"
+                        city: "Anytown"
+                        country: "USA"
+                      - id: "66666666-7777-8888-9999-000000000000"
+                        street_address: "555 Maple Ave"
+                        apartment: "Floor 3"
+                        postal_code: "11223"
+                        city: "Anytown"
+                        country: "USA"
+                    medical_history:
+                      - id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+                        diagnostic: "Hypertension"
+                        treatment: "Medication A"
+                        doctor:
+                          id: "dddddddd-eeee-ffff-0000-111111111111"
+                          first_name: "Alice"
+                          last_name: "Brown"
+                        start_date: "2022-01-15"
+                        end_date: "2022-06-15"
+                    medical_visits:
+                      - id: "ffffffff-gggg-hhhh-iiii-jjjjjjjjjjjj"
+                        patient_id: "INS123456"
+                        establishment:
+                          establishment_id: "e1234567-89ab-cdef-0123-456789abcdef"
+                          establishment_name: "Central City Hospital"
+                          created_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                        doctor:
+                          id: "dddddddd-eeee-ffff-0000-111111111111"
+                          first_name: "Alice"
+                          last_name: "Brown"
+                        visit_date: "2022-02-20T10:30:00Z"
+                        diagnostic_established: "Common cold with mild fever"
+                        treatment: "Rest and hydration"
+                        visit_summary: "Patient presented with cold symptoms"
+                        notes: "Follow-up in one week if symptoms persist"
+                        created_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                        modified_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                    parents:
+                      - parent:
+                          id: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+                          login: "parent1"
+                          user_type: "PATIENT"
+                          first_name: "Parent"
+                          last_name: "One"
+                          phone_number: "111-222-3333"
+                          email: "parent1@example.com"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ValidationError:
+                  summary: Validation Error
+                  value:
+                    error: "Validation error details..."
+                ForeignKeyViolation:
+                  summary: Foreign Key Violation
+                  value:
+                    error: "Invalid foreign key reference."
+        '404':
+          description: Not Found - Patient Does Not Exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NotFound:
+                  summary: Patient Not Found
+                  value:
+                    error: "Patient not found."
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ServerError:
+                  summary: Unexpected Server Error
+                  value:
+                    error: "An unexpected error occurred."
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Patients
+      summary: Update a Patient
+      description: >
+        Updates an existing patient's information (while preserving the old version in history)
+        based on the provided `medical_insurance_id`.
+      parameters:
+        - in: path
+          name: medical_insurance_id
+          required: true
+          schema:
+            type: string
+            example: "INS123456"
+          description: The medical insurance ID of the patient to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientUpdate'
+            examples:
+              Example1:
+                summary: Sample Patient Update
+                value:
+                  login: "johndoe_updated"
+                  gender: "Male"
+                  city_of_birth: "Anytown"
+                  date_of_birth: "1995-08-17"
+                  first_name: "John"
+                  last_name: "Doe"
+                  phone_number: "123-456-7890"
+                  email: "john.doe@example.com"
+      responses:
+        '201':
+          description: Patient updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientUpdateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Patient Update
+                  value:
+                    user_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    login: "johndoe_updated"
+                    user_type: "PATIENT"
+                    first_name: "John"
+                    last_name: "Doe"
+                    phone_number: "123-456-7890"
+                    email: "john.doe@example.com"
+                    medical_insurance_id: "INS123456"
+                    gender: "Male"
+                    city_of_birth: "Anytown"
+                    created_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ValidationError:
+                  summary: Validation Error
+                  value:
+                    error: "Validation error details..."
+                ForeignKeyViolation:
+                  summary: Foreign Key Violation
+                  value:
+                    error: "Invalid foreign key reference."
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ServerError:
+                  summary: Unexpected Server Error
+                  value:
+                    error: "An unexpected error occurred."
+
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Patients
+      summary: Hide a Patient
+      description: >
+        Makes a patient hidden in the system without actually deleting them.
+        This preserves data integrity while removing them from standard queries.
+      parameters:
+        - in: path
+          name: medical_insurance_id
+          required: true
+          schema:
+            type: string
+            example: "INS123456"
+          description: The medical insurance ID of the patient to hide.
+      responses:
+        '200':
+          description: Patient successfully hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Hiding
+                  value:
+                    status: "success"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/patients/{medical_insurance_id}/version_history:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Patients
+      summary: Retrieve Patient Version History
+      description: >
+        Retrieves the complete version history of a patient, showing the full patient record
+        at each point in time when any changes were made. Returns a map where keys are timestamps
+        and values are complete patient records as they existed at those points in time.
+      parameters:
+        - in: path
+          name: medical_insurance_id
+          required: true
+          schema:
+            type: string
+            example: "INS123456"
+          description: The medical insurance ID of the patient to retrieve history for.
+      responses:
+        '200':
+          description: Patient version history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/PatientVersionSnapshot'
+              examples:
+                SuccessResponse:
+                  summary: Successful Patient Version History Retrieval
+                  value:
+                    "2025-03-22T05:25:56.000000":
+                      user_id: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+                      login: "johndoe"
+                      user_type: "PATIENT"
+                      first_name: "John"
+                      last_name: "Doe"
+                      phone_number: "123-456-7890"
+                      email: "john.doe@example.com"
+                      medical_insurance_id: "INS123456"
+                      gender: "Male"
+                      city_of_birth: "Anytown"
+                      date_of_birth: "Sat, 15 Jul 1995 00:00:00 GMT"
+                      created_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                      modified_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                      coordinates: []
+                      medical_history: []
+                      medical_visits: []
+                      parents: []
+                      snapshot_timestamp: "Sat, 22 Mar 2025 05:25:56 GMT"
+                    "2025-03-22T05:25:58.000000":
+                      user_id: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+                      login: "johndoe"
+                      user_type: "PATIENT"
+                      first_name: "John"
+                      last_name: "Doe"
+                      phone_number: "123-456-7890"
+                      email: "john.doe@example.com"
+                      medical_insurance_id: "INS123456"
+                      gender: "Male"
+                      city_of_birth: "Anytown"
+                      date_of_birth: "Sat, 15 Jul 1995 00:00:00 GMT"
+                      created_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                      modified_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                      coordinates:
+                        - id: "7e0baadd-3ed5-488d-8680-f9a76b0405c0"
+                          street_address: "123 Main St"
+                          apartment: "Apt 4B"
+                          postal_code: "12345"
+                          city: "Anytown"
+                          country: "USA"
+                      medical_history:
+                        - id: "e7285b2d-e775-40bf-9570-7db47dc8efa2"
+                          diagnostic: "Hypertension"
+                          treatment: "Medication A"
+                          doctor:
+                            id: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+                            first_name: "Alice"
+                            last_name: "Brown"
+                          start_date: "2022-01-15"
+                          end_date: "2022-06-15"
+                      medical_visits: []
+                      parents: []
+                      snapshot_timestamp: "Sat, 22 Mar 2025 05:25:58 GMT"
+        '400':
+          description: Bad Request - Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Patient Does Not Exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/patients/{medical_insurance_id}/history:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Medical History
+      summary: Add Medical History Record
+      description: >
+        Adds a new medical history record for a patient identified by their medical_insurance_id.
+        This operation requires authentication and appropriate permissions.
+      parameters:
+        - in: path
+          name: medical_insurance_id
+          required: true
+          schema:
+            type: string
+            example: "INS123456"
+          description: The medical insurance ID of the patient.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HistoryCreate'
+            examples:
+              Example1:
+                summary: Sample Medical History Creation
+                value:
+                  diagnostic: "Hypertension"
+                  treatment: "Angiotensin II receptor blockers"
+                  doctor_id: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+                  start_date: "2023-05-15"
+                  end_date: "2023-07-10"
+      responses:
+        '201':
+          description: Medical history record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryCreateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Creation
+                  value:
+                    history_id: "e7285b2d-e775-40bf-9570-7db47dc8efa2"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/patients/{medical_insurance_id}/history/{history_id}:
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Medical History
+      summary: Update Medical History Record
+      description: >
+        Updates an existing medical history record for a patient while preserving the previous version.
+        This operation requires authentication and appropriate permissions.
+      parameters:
+        - in: path
+          name: medical_insurance_id
+          required: true
+          schema:
+            type: string
+            example: "INS123456"
+          description: The medical insurance ID of the patient.
+        - in: path
+          name: history_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "e7285b2d-e775-40bf-9570-7db47dc8efa2"
+          description: The unique identifier of the medical history record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HistoryUpdate'
+            examples:
+              Example1:
+                summary: Sample Medical History Update
+                value:
+                  diagnostic: "Hypertension Stage 2"
+                  treatment: "Modified Angiotensin II receptor blockers dosage"
+                  doctor_id: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+                  start_date: "2023-05-15"
+                  end_date: "2023-08-20"
+      responses:
+        '201':
+          description: Medical history record updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalHistoryUpdateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Update
+                  value:
+                    patient_id: "INS123456"
+                    history_id: "e7285b2d-e775-40bf-9570-7db47dc8efa2"
+                    diagnostic: "Hypertension Stage 2"
+                    treatment: "Modified Angiotensin II receptor blockers dosage"
+                    doctor_id: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+                    start_date: "2023-05-15"
+                    end_date: "2023-08-20"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - History record does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/patients/{medical_insurance_id}/visits:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Medical Visits
+      summary: Add Medical Visit Record
+      description: >
+        Adds a new medical visit record for a patient identified by their medical_insurance_id.
+        This operation requires authentication and appropriate permissions.
+      parameters:
+        - in: path
+          name: medical_insurance_id
+          required: true
+          schema:
+            type: string
+            example: "INS123456"
+          description: The medical insurance ID of the patient.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitCreate'
+            examples:
+              Example1:
+                summary: Sample Medical Visit Creation
+                value:
+                  establishment_id: "e1234567-89ab-cdef-0123-456789abcdef"
+                  doctor_id: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+                  visit_date: "2023-06-20"
+                  diagnostic: "Common cold with mild fever"
+                  treatment: "Rest, hydration, and over-the-counter pain relievers"
+                  summary: "Patient presented with cold symptoms. Recommended home care and rest."
+                  notes: "Follow-up in one week if symptoms persist"
+      responses:
+        '201':
+          description: Medical visit record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitCreateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Creation
+                  value:
+                    visit_id: "194400ed-b90d-4735-9fa2-73443c2e5700"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/patients/{medical_insurance_id}/visits/{visit_id}:
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Medical Visits
+      summary: Update Medical Visit Record
+      description: >
+        Updates an existing medical visit record for a patient while preserving the previous version.
+        This operation requires authentication and appropriate permissions.
+      parameters:
+        - in: path
+          name: medical_insurance_id
+          required: true
+          schema:
+            type: string
+            example: "INS123456"
+          description: The medical insurance ID of the patient.
+        - in: path
+          name: visit_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "194400ed-b90d-4735-9fa2-73443c2e5700"
+          description: The unique identifier of the medical visit record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitUpdate'
+            examples:
+              Example1:
+                summary: Sample Medical Visit Update
+                value:
+                  establishment_id: "e1234567-89ab-cdef-0123-456789abcdef"
+                  doctor_id: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+                  visit_date: "2023-06-20"
+                  diagnostic: "Upper respiratory infection"
+                  treatment: "Prescribed antibiotics and continued rest"
+                  summary: "Follow-up visit for cold symptoms. Condition worsened to respiratory infection."
+                  notes: "Complete full course of antibiotics. Return if fever persists."
+      responses:
+        '201':
+          description: Medical visit record updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitUpdateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Update
+                  value:
+                    visit_id: "194400ed-b90d-4735-9fa2-73443c2e5700"
+                    patient_id: "INS123456"
+                    establishment_id: "e1234567-89ab-cdef-0123-456789abcdef"
+                    doctor_id: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+                    visit_date: "2023-06-20"
+                    diagnostic: "Upper respiratory infection"
+                    treatment: "Prescribed antibiotics and continued rest"
+                    summary: "Follow-up visit for cold symptoms. Condition worsened to respiratory infection."
+                    notes: "Complete full course of antibiotics. Return if fever persists."
+                    created_at: "2023-06-20T10:30:00Z"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Visit record does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate a user during the login process
+      description: >
+        Verify that the credentials given match the hash in the database.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+            examples:
+              Example1:
+                summary: Sample Authentication
+                value:
+                  email: "john.doe@example.com"
+                  password: "mysecretpassword"
+      responses:
+        '200':
+          description: Authentication successful or MFA required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful login
+                  value:
+                    status: "Success"
+                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    user:
+                      user_id: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+                      user_type: "PATIENT" 
+                      name: "John Doe"
+                      medical_insurance_id: "INS123456"
+                      requires_mfa: false
+                MfaRequiredResponse:
+                  summary: MFA verification required
+                  value:
+                    status: "MFA Required"
+                    temp_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    user:
+                      user_id: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+                      user_type: "PATIENT" 
+                      name: "John Doe"
+                      medical_insurance_id: "INS123456"
+                      requires_mfa: true
+        '401':
+          description: Unsuccessful login attempt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                WrongCredentialsResponse:
+                  summary: Unsuccessful login
+                  value:
+                    status: "Wrong credentials"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                ServerErrorResponse:
+                  summary: Internal Server Error
+                  value:
+                    status: "Internal server error"
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout a user by blacklisting their token
+      description: >
+        Revokes the provided JWT token to prevent its further use.
+        Requires authentication through a valid token.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "Successfully logged out"
+              examples:
+                SuccessResponse:
+                  summary: Successful logout
+                  value:
+                    status: "Successfully logged out"
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidTokenResponse:
+                  summary: Invalid token
+                  value:
+                    status: "error"
+                    error: "Invalid token"
+                    message: "Signature verification failed"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ServerErrorResponse:
+                  summary: Internal Server Error
+                  value:
+                    error: "Error during logout"
+
+  /api/users:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+      summary: Add a New User
+      description: Creates a new user with basic information.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+            examples:
+              Example1:
+                summary: Sample User Creation
+                value:
+                  login: "johndoe"
+                  password: "mysecretpassword"
+                  user_type: "PATIENT"
+                  first_name: "John"
+                  last_name: "Doe"
+                  phone_number: "123-456-7890"
+                  email: "john.doe@example.com"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreateResponse'
+        '400':
+          description: Bad Request - Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/users/{user_id}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+      summary: Retrieve a User
+      description: Retrieves detailed information about a user identified by their user_id.
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the user to retrieve.
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+      summary: Update a User
+      description: Updates an existing user's information while preserving the old version in history.
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the user to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+            examples:
+              Example1:
+                summary: Sample User Update
+                value:
+                  login: "johndoe"
+                  first_name: "John"
+                  last_name: "Doe"
+                  phone_number: "123-456-7890"
+                  email: "john.doe@example.com"
+      responses:
+        '201':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdateResponse'
+        '400':
+          description: Bad Request - Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+      summary: Hide a User
+      description: >
+        Makes a user hidden in the system without actually deleting them.
+        This preserves data integrity while removing them from standard queries.
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the user to hide.
+      responses:
+        '200':
+          description: User successfully hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Hiding
+                  value:
+                    status: "success"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    
+
+  /api/doctors:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Doctors
+      summary: Retrieve All Doctors
+      description: >
+        Retrieves a list of all doctors in the system.
+        This operation requires authentication.
+      responses:
+        '200':
+          description: Doctors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DoctorListResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Doctors Retrieval
+                  value:
+                    status: "success"
+                    data:
+                      - user_id: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+                        first_name: "Alice"
+                        last_name: "Brown"
+                        email: "alice.brown@example.com"
+                        phone_number: "555-555-5555"
+                      - user_id: "aa57295e-fa4f-4821-b04c-711ea0be487a"
+                        first_name: "Bob"
+                        last_name: "Johnson"
+                        email: "bob.johnson@example.com"
+                        phone_number: "444-444-4444"
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/establishments:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Establishments
+      summary: Retrieve All Establishments
+      description: >
+        Retrieves a list of all medical establishments in the system.
+        This operation requires authentication.
+      responses:
+        '200':
+          description: Establishments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EstablishmentListResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Establishments Retrieval
+                  value:
+                    status: "success"
+                    data:
+                      - establishment_id: "e1234567-89ab-cdef-0123-456789abcdef"
+                        establishment_name: "Central City Hospital"
+                        created_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                      - establishment_id: "e2345678-89ab-cdef-0123-456789abcdef"
+                        establishment_name: "Westside Medical Center"
+                        created_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Establishments
+      summary: Hide an Establishment
+      description: >
+        Makes an establishment hidden in the system without actually deleting it.
+        This preserves data integrity while removing it from standard queries.
+      parameters:
+        - in: path
+          name: establishment_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the establishment to hide.
+      responses:
+        '200':
+          description: Establishment successfully hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Hiding
+                  value:
+                    status: "success"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Establishment does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/history/{history_id}:
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Medical History
+      summary: Hide a Medical History Record
+      description: >
+        Makes a medical history record hidden in the system without actually deleting it.
+        This preserves data integrity while removing it from standard queries.
+      parameters:
+        - in: path
+          name: history_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the medical history record to hide.
+      responses:
+        '200':
+          description: Medical history record successfully hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Hiding
+                  value:
+                    status: "success"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Medical history record does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Medical History
+      summary: Update Medical History Record (Alternative)
+      description: >
+        Updates an existing medical history record without needing the medical_insurance_id.
+        This is an alternative to the /patients/{medical_insurance_id}/history/{history_id} endpoint.
+      parameters:
+        - in: path
+          name: history_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "e7285b2d-e775-40bf-9570-7db47dc8efa2"
+          description: The unique identifier of the medical history record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HistoryUpdate'
+      responses:
+        '201':
+          description: Medical history record updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalHistoryUpdateResponse'
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - History record does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/visits/{visit_id}:
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Medical Visits
+      summary: Hide a Medical Visit Record
+      description: >
+        Makes a medical visit record hidden in the system without actually deleting it.
+        This preserves data integrity while removing it from standard queries.
+      parameters:
+        - in: path
+          name: visit_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the medical visit record to hide.
+      responses:
+        '200':
+          description: Medical visit record successfully hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Hiding
+                  value:
+                    status: "success"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Medical visit record does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Medical Visits
+      summary: Update Medical Visit Record (Alternative)
+      description: >
+        Updates an existing medical visit record without needing the medical_insurance_id.
+        This is an alternative to the /patients/{medical_insurance_id}/visits/{visit_id} endpoint.
+      parameters:
+        - in: path
+          name: visit_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "194400ed-b90d-4735-9fa2-73443c2e5700"
+          description: The unique identifier of the medical visit record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitUpdate'
+      responses:
+        '201':
+          description: Medical visit record updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitUpdateResponse'
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Visit record does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/users/{user_id}/credentials:
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+      summary: Update User Credentials
+      description: >
+        Updates a user's login and/or password information.
+        This requires appropriate permissions (admin, doctor, or healthcare professional).
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the user whose credentials are being updated.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialsUpdate'
+            examples:
+              Example1:
+                summary: Credential Update Example
+                value:
+                  login: "newlogin"
+                  password: "newpassword123"
+      responses:
+        '201':
+          description: Credentials updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Update
+                  value:
+                    status: "success"
+        '400':
+          description: Bad Request - Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - User does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/users/{user_id}/coordinates:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Coordinates
+      summary: Add Coordinates for a User
+      description: >
+        Adds a new address/coordinates record for the specified user.
+        The user can be a patient or any other type of user.
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the user to add coordinates for.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoordinateCreate'
+            examples:
+              Example1:
+                summary: Sample Coordinates Creation
+                value:
+                  street_address: "123 Main St"
+                  apartment: "Apt 4B"
+                  postal_code: "12345"
+                  city: "Anytown"
+                  country: "USA"
+      responses:
+        '201':
+          description: Coordinates created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoordinateCreateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Creation
+                  value:
+                    coordinate_id: "11111111-2222-3333-4444-555555555555"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/users/{user_id}/coordinates/{coordinate_id}:
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Coordinates
+      summary: Update Coordinates
+      description: >
+        Updates an existing coordinates/address record.
+        Preserves the previous version of the coordinates for historical purposes.
+      parameters:
+        - in: path
+          name: coordinate_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the coordinates to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoordinateUpdate'
+            examples:
+              Example1:
+                summary: Sample Coordinates Update
+                value:
+                  street_address: "456 Updated St"
+                  apartment: "Suite 7C"
+                  postal_code: "54321"
+                  city: "New Town"
+                  country: "USA"
+      responses:
+        '201':
+          description: Coordinates updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoordinateUpdateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Update
+                  value:
+                    coordinate_id: "11111111-2222-3333-4444-555555555555"
+                    user_id: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+                    street_address: "456 Updated St"
+                    apartment: "Suite 7C"
+                    postal_code: "54321"
+                    city: "New Town"
+                    country: "USA"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Coordinates do not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/coordinates/{coordinate_id}:
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Coordinates
+      summary: Update Coordinates
+      description: >
+        Updates an existing coordinates/address record.
+        Preserves the previous version of the coordinates for historical purposes.
+      parameters:
+        - in: path
+          name: coordinate_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the coordinates to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoordinateUpdate'
+            examples:
+              Example1:
+                summary: Sample Coordinates Update
+                value:
+                  street_address: "456 Updated St"
+                  apartment: "Suite 7C"
+                  postal_code: "54321"
+                  city: "New Town"
+                  country: "USA"
+      responses:
+        '201':
+          description: Coordinates updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoordinateUpdateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Update
+                  value:
+                    coordinate_id: "11111111-2222-3333-4444-555555555555"
+                    user_id: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+                    street_address: "456 Updated St"
+                    apartment: "Suite 7C"
+                    postal_code: "54321"
+                    city: "New Town"
+                    country: "USA"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Coordinates do not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Coordinates
+      summary: Hide Coordinates
+      description: >
+        Makes coordinates hidden in the system without actually deleting them.
+        This preserves data integrity while removing them from standard queries.
+      parameters:
+        - in: path
+          name: coordinate_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the coordinates to hide.
+      responses:
+        '200':
+          description: Coordinates successfully hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Hiding
+                  value:
+                    status: "success"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Coordinates do not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/users/{user_id}/coordinates/email-phone:
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+      summary: Update User Email and Phone
+      description: >
+        Modifies a user's email and phone number information while preserving the old version in history.
+        This operation requires authentication as the user themselves, a doctor, or an admin.
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the user whose contact information will be updated.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailPhoneUpdate'
+            examples:
+              Example1:
+                summary: Sample Email and Phone Update
+                value:
+                  phone_number: "123-456-7890"
+                  email: "updated.email@example.com"
+      responses:
+        '201':
+          description: Contact information updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientUpdateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Update
+                  value:
+                    user_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    login: "johndoe"
+                    user_type: "PATIENT"
+                    first_name: "John"
+                    last_name: "Doe"
+                    phone_number: "123-456-7890"
+                    email: "updated.email@example.com"
+                    medical_insurance_id: "INS123456"
+                    gender: "Male"
+                    city_of_birth: "Anytown"
+                    created_at: "Fri, 14 Feb 2025 09:33:35 GMT"
+                    date_of_birth: "1995-07-15"
+        '400':
+          description: Bad Request - Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/users/{child_user_id}/parents/{parent_user_id}:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Parents
+      summary: Add Parent-Child Relationship
+      description: >
+        Establishes a parent-child relationship between two users.
+        This requires appropriate permissions (admin, doctor, or healthcare professional).
+      parameters:
+        - in: path
+          name: child_user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the child user.
+        - in: path
+          name: parent_user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the parent user.
+      responses:
+        '201':
+          description: Parent-child relationship created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Creation
+                  value:
+                    status: "success"
+        '400':
+          description: Bad Request - Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Parents
+      summary: Hide Parent-Child Relationship
+      description: >
+        Makes a parent-child relationship hidden in the system without actually deleting it.
+        This preserves data integrity while removing it from standard queries.
+      parameters:
+        - in: path
+          name: child_user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the child user.
+        - in: path
+          name: parent_user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the parent user.
+      responses:
+        '200':
+          description: Parent-child relationship successfully hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Hiding
+                  value:
+                    status: "success"
+        '400':
+          description: Bad Request - Invalid Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Relationship does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/users/{child_user_id}/parents:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Parents
+      summary: Add Parent for Child User
+      description: >
+        Creates a new user to be the parent of the specified child user.
+        This method both creates the parent user and establishes the parent-child relationship.
+        This requires appropriate permissions (admin, doctor, or healthcare professional).
+      parameters:
+        - in: path
+          name: child_user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the child user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParentCreate'
+            examples:
+              Example1:
+                summary: Sample Parent User Creation
+                value:
+                  first_name: "Alice"
+                  last_name: "Johnson"
+                  phone_number: "123-456-7890"
+                  email: "alice@email.com"
+                  gender: "Female"
+      responses:
+        '201':
+          description: Parent user created and relationship established successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreateResponse'
+              examples:
+                SuccessResponse:
+                  summary: Successful Creation
+                  value:
+                    user_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '400':
+          description: Bad Request - Validation Error or Foreign Key Violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/mfa/setup:
+    post:
+      tags:
+        - Authentication
+      summary: Set up MFA for the authenticated user
+      description: >
+        Generates a new TOTP secret and backup codes for the authenticated user.
+        Returns the secret and a provisioning URI for QR code generation.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: MFA setup successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFASetupResponse'
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/mfa/enable:
+    post:
+      tags:
+        - Authentication
+      summary: Enable MFA for the authenticated user
+      description: >
+        Enables MFA for the authenticated user after verifying a TOTP code.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MFACodeRequest'
+      responses:
+        '200':
+          description: MFA enabled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "MFA enabled successfully"
+        '400':
+          description: Bad Request - Invalid code or MFA not set up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /api/mfa/disable:
+    post:
+      tags:
+        - Authentication
+      summary: Disable MFA for the authenticated user
+      description: >
+        Disables MFA for the authenticated user after verifying a TOTP code.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MFACodeRequest'
+      responses:
+        '200':
+          description: MFA disabled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "MFA disabled successfully"
+        '400':
+          description: Bad Request - Invalid code or MFA not enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /api/mfa/verify:
+    post:
+      tags:
+        - Authentication
+      summary: Verify an MFA code and obtain a full access token
+      description: >
+        Verifies a TOTP code for MFA and, if successful, issues a full access token.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MFACodeRequest'
+      responses:
+        '200':
+          description: MFA verification successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                SuccessResponse:
+                  value:
+                    status: "Success"
+                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    user:
+                      user_id: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+                      user_type: "PATIENT"
+                      name: "John Doe"
+                      medical_insurance_id: "INS123456"
+                      requires_mfa: false
+        '400':
+          description: Bad Request - Invalid code or token not for MFA verification
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /api/mfa/status:
+    get:
+      tags:
+        - Authentication
+      summary: Get MFA status for the authenticated user
+      description: >
+        Returns the current MFA configuration status for the authenticated user.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: MFA status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFAStatusResponse'
+              examples:
+                NotConfigured:
+                  summary: MFA not configured
+                  value:
+                    status: "success"
+                    mfa_configured: false
+                    mfa_enabled: false
+                ConfiguredButDisabled:
+                  summary: MFA configured but disabled
+                  value:
+                    status: "success"
+                    mfa_configured: true
+                    mfa_enabled: false
+                    configured_at: "2023-09-15T14:30:00Z"
+                    last_modified: "2023-09-15T14:35:00Z"
+                Enabled:
+                  summary: MFA enabled
+                  value:
+                    status: "success"
+                    mfa_configured: true
+                    mfa_enabled: true
+                    configured_at: "2023-09-15T14:30:00Z"
+                    last_modified: "2023-09-15T14:35:00Z"
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /api/auth/login
+  schemas:
+    HistoryCreate:
+      type: object
+      description: Schema for creating a new medical history record.
+      properties:
+        diagnostic:
+          type: string
+          example: "Hypertension"
+        treatment:
+          type: string
+          example: "Angiotensin II receptor blockers"
+        doctor_id:
+          type: string
+          format: uuid
+          example: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+        start_date:
+          type: string
+          format: date
+          example: "1995-07-15"
+        end_date:
+          type: string
+          format: date
+          example: "1995-09-12"
+          nullable: true
+      required:
+        - diagnostic
+        - treatment
+        - doctor_id
+        - start_date
+      additionalProperties: false
+    
+    HistoryUpdate:
+      type: object
+      description: Schema for updating an existing medical history record.
+      properties:
+        diagnostic:
+          type: string
+          example: "Hypertension"
+        treatment:
+          type: string
+          example: "Angiotensin II receptor blockers"
+        doctor_id:
+          type: string
+          format: uuid
+          example: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+        start_date:
+          type: string
+          format: date
+          example: "1995-07-15"
+        end_date:
+          type: string
+          format: date
+          example: "1995-09-12"
+      required:
+        - diagnostic
+        - treatment
+        - doctor_id
+        - start_date
+        - end_date
+      additionalProperties: false
+    
+    HistoryCreateResponse:
+      type: object
+      description: Response schema for a newly created medical history record.
+      properties:
+        history_id:
+          type: string
+          format: uuid
+          example: "e7285b2d-e775-40bf-9570-7db47dc8efa2"
+      required:
+        - history_id
+      additionalProperties: false
+
+    MedicalHistoryUpdateResponse:
+      type: object
+      description: Response schema for an updated medical history record.
+      properties:
+        patient_id:
+          type: string
+          example: "INS123456"
+        history_id:
+          type: string
+          format: uuid
+          example: "e7285b2d-e775-40bf-9570-7db47dc8efa2"
+        diagnostic:
+          type: string
+          example: "Hypertension"
+        treatment:
+          type: string
+          example: "Medication A"
+        doctor_id:
+          type: string
+          format: uuid
+          example: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+        start_date:
+          type: string
+          format: date
+          example: "2022-01-15"
+        end_date:
+          type: string
+          format: date
+          example: "2022-06-15"
+      required:
+        - patient_id
+        - history_id
+        - diagnostic
+        - treatment
+        - doctor_id
+        - start_date
+      additionalProperties: false
+
+    VisitCreate:
+      type: object
+      description: Schema for creating a new medical visit record.
+      properties:
+        establishment_id:
+          type: string
+          format: uuid
+          example: "e1234567-89ab-cdef-0123-456789abcdef"
+        doctor_id:
+          type: string
+          format: uuid
+          example: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+        visit_date:
+          type: string
+          format: date
+          example: "2022-02-20"
+        diagnostic:
+          type: string
+          example: "Common cold with mild fever"
+          nullable: true
+        treatment:
+          type: string
+          example: "Rest, hydration, and over-the-counter pain relievers"
+          nullable: true
+        summary:
+          type: string
+          example: "Patient presented with cold symptoms. Recommended home care and rest."
+        notes:
+          type: string
+          example: "Follow-up in one week if symptoms persist"
+          nullable: true
+      required:
+        - establishment_id
+        - doctor_id
+        - visit_date
+        - summary
+      additionalProperties: false
+
+    VisitUpdate:
+      type: object
+      description: Schema for updating an existing medical visit record.
+      properties:
+        establishment_id:
+          type: string
+          format: uuid
+          example: "e1234567-89ab-cdef-0123-456789abcdef"
+        doctor_id:
+          type: string
+          format: uuid
+          example: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+        visit_date:
+          type: string
+          format: date
+          example: "2022-02-20"
+        diagnostic:
+          type: string
+          example: "Common cold with mild fever"
+          nullable: true
+        treatment:
+          type: string
+          example: "Rest, hydration, and over-the-counter pain relievers"
+          nullable: true
+        summary:
+          type: string
+          example: "Patient presented with cold symptoms. Recommended home care and rest."
+        notes:
+          type: string
+          example: "Follow-up in one week if symptoms persist"
+          nullable: true
+      required:
+        - establishment_id
+        - doctor_id
+        - visit_date
+        - summary
+      additionalProperties: false
+
+    VisitCreateResponse:
+      type: object
+      description: Response schema for a newly created medical visit record.
+      properties:
+        visit_id:
+          type: string
+          format: uuid
+          example: "194400ed-b90d-4735-9fa2-73443c2e5700"
+      required:
+        - visit_id
+      additionalProperties: false
+
+    VisitUpdateResponse:
+      type: object
+      description: Response schema for an updated medical visit record.
+      properties:
+        visit_id:
+          type: string
+          format: uuid
+          example: "194400ed-b90d-4735-9fa2-73443c2e5700"
+        patient_id:
+          type: string
+          example: "INS123456"
+        establishment_id:
+          type: string
+          format: uuid
+          example: "e1234567-89ab-cdef-0123-456789abcdef"
+        doctor_id:
+          type: string
+          format: uuid
+          example: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+        visit_date:
+          type: string
+          format: date
+          example: "2022-02-20"
+        diagnostic:
+          type: string
+          example: "Common cold with mild fever"
+          nullable: true
+        treatment:
+          type: string
+          example: "Rest, hydration, and over-the-counter pain relievers"
+          nullable: true
+        summary:
+          type: string
+          example: "Patient presented with cold symptoms. Recommended home care and rest."
+        notes:
+          type: string
+          example: "Follow-up in one week if symptoms persist"
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2022-02-20T10:30:00Z"
+      required:
+        - visit_id
+        - patient_id
+        - establishment_id
+        - doctor_id
+        - visit_date
+        - summary
+      additionalProperties: false
+
+    PatientCreate:
+      type: object
+      description: Schema for creating a new patient.
+      properties:
+        login:
+          type: string
+          example: "johndoe"
+          description: Unique login identifier.
+        password:
+          type: string
+          description: Plain text password. It will be hashed after submission.
+          example: "mysecretpassword"
+        user_type:
+          type: string
+          enum: ["ADMIN", "PATIENT", "DOCTOR", "HEALTHCARE PROFESSIONAL"]
+          example: "PATIENT"
+          description: Type of the user.
+        first_name:
+          type: string
+          example: "John"
+          description: User's first name.
+        last_name:
+          type: string
+          example: "Doe"
+          description: User's last name.
+        phone_number:
+          type: string
+          example: "123-456-7890"
+          description: User's phone number.
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+          description: User's email address.
+        medical_insurance_id:
+          type: string
+          example: "INS123456"
+          description: Patient's medical insurance ID.
+        gender:
+          type: string
+          example: "Male"
+          description: Patient's gender.
+        city_of_birth:
+          type: string
+          example: "Anytown"
+          description: City where the patient was born.
+        date_of_birth:
+          type: string
+          format: date
+          example: "1996-03-21"
+          description: Patient's date of birth in YYYY-MM-DD format.
+        coordinates:
+          type: array
+          description: List of addresses associated with the patient.
+          items:
+            $ref: '#/components/schemas/CoordinateCreate'
+        parent_ids:
+          type: array
+          description: Optional list of parent user IDs (UUID v4).
+          items:
+            type: string
+            format: uuid
+          example:
+            - "99febb18-8a4c-40b6-942f-df3c60d522dd"
+            - "eb711323-52d6-40a8-b335-8b3e587ed009"
+      required:
+        - login
+        - password
+        - user_type
+        - first_name
+        - last_name
+        - phone_number
+        - email
+        - medical_insurance_id
+        - gender
+        - city_of_birth
+        - coordinates
+      additionalProperties: false
+
+    PatientCreateResponse:
+      type: object
+      description: Response schema for a newly created patient.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          description: Unique identifier for the patient.
+      required:
+        - user_id
+      additionalProperties: false
+
+    PatientResponse:
+      type: object
+      description: Schema for patient details.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          description: Unique patient identifier.
+        login:
+          type: string
+          example: "johndoe"
+        user_type:
+          type: string
+          example: "PATIENT"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        phone_number:
+          type: string
+          example: "123-456-7890"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        medical_insurance_id:
+          type: string
+          example: "INS123456"
+        gender:
+          type: string
+          example: "Male"
+        city_of_birth:
+          type: string
+          example: "Anytown"
+        date_of_birth:
+          type: string
+          format: date-time
+          example: "Sat, 15 Jul 1995 00:00:00 GMT"
+          description: Date of birth in traditional format.
+        created_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+        modified_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+        coordinates:
+          type: array
+          description: List of addresses.
+          items:
+            $ref: '#/components/schemas/CoordinateResponse'
+        medical_history:
+          type: array
+          description: List of medical history records.
+          items:
+            $ref: '#/components/schemas/MedicalHistoryResponse'
+        medical_visits:
+          type: array
+          description: List of medical visits.
+          items:
+            $ref: '#/components/schemas/MedicalVisitResponse'
+        parents:
+          type: array
+          description: List of parent relationships.
+          items:
+            $ref: '#/components/schemas/ParentResponse'
+      required:
+        - user_id
+        - login
+        - user_type
+        - first_name
+        - last_name
+        - phone_number
+        - email
+        - medical_insurance_id
+        - gender
+        - city_of_birth
+        - created_at
+        - modified_at
+        - coordinates
+        - medical_history
+        - medical_visits
+        - parents
+      additionalProperties: false
+
+    EstablishmentResponse:
+      type: object
+      description: Schema for an establishment record.
+      properties:
+        establishment_id:
+          type: string
+          format: uuid
+          example: "e1234567-89ab-cdef-0123-456789abcdef"
+        establishment_name:
+          type: string
+          example: "Central City Hospital"
+        created_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+      required:
+        - establishment_id
+        - establishment_name
+      additionalProperties: false
+
+    PatientUpdate:
+      type: object
+      description: Schema for updating an existing patient.
+      properties:
+        login:
+          type: string
+          example: "johndoe_updated"
+        gender:
+          type: string
+          example: "Male"
+        city_of_birth:
+          type: string
+          example: "Anytown"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        phone_number:
+          type: string
+          example: "123-456-7890"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        date_of_birth:
+          type: string
+          format: date
+          example: "1995-07-15"
+          description: Date of birth in YYYY-MM-DD format for input.
+      required:
+        - login
+        - gender
+        - city_of_birth
+        - first_name
+        - last_name
+        - phone_number
+        - email
+      additionalProperties: false
+
+    PatientUpdateResponse:
+      type: object
+      description: Schema for the response after updating a patient.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        login:
+          type: string
+          example: "johndoe_updated"
+        user_type:
+          type: string
+          example: "PATIENT"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        phone_number:
+          type: string
+          example: "123-456-7890"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        medical_insurance_id:
+          type: string
+          example: "INS123456"
+        gender:
+          type: string
+          example: "Male"
+        city_of_birth:
+          type: string
+          example: "Anytown"
+        date_of_birth:
+          type: string
+          format: date-time
+          example: "Sat, 15 Jul 1995 00:00:00 GMT"
+          description: Date of birth in traditional format response.
+        created_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+      required:
+        - user_id
+        - login
+        - user_type
+        - first_name
+        - last_name
+        - phone_number
+        - email
+        - medical_insurance_id
+        - gender
+        - city_of_birth
+        - created_at
+      additionalProperties: false
+
+    CoordinateCreate:
+      type: object
+      description: Schema for creating an address.
+      properties:
+        street_address:
+          type: string
+          example: "123 Main St"
+        apartment:
+          type: string
+          example: "Apt 4B"
+          description: Apartment or suite (optional).
+        postal_code:
+          type: string
+          example: "12345"
+        city:
+          type: string
+          example: "Anytown"
+        country:
+          type: string
+          example: "USA"
+      required:
+        - street_address
+        - postal_code
+        - city
+        - country
+      additionalProperties: false
+
+    CoordinateResponse:
+      type: object
+      description: Schema for address details.
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "11111111-2222-3333-4444-555555555555"
+        street_address:
+          type: string
+          example: "123 Main St"
+        apartment:
+          type: string
+          example: "Apt 4B"
+        postal_code:
+          type: string
+          example: "12345"
+        city:
+          type: string
+          example: "Anytown"
+        country:
+          type: string
+          example: "USA"
+      required:
+        - id
+        - street_address
+        - postal_code
+        - city
+        - country
+      additionalProperties: false
+
+    MedicalHistoryResponse:
+      type: object
+      description: Schema for a medical history record.
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        diagnostic:
+          type: string
+          example: "Hypertension"
+        treatment:
+          type: string
+          example: "Medication A"
+        doctor:
+          $ref: '#/components/schemas/DoctorResponse'
+        start_date:
+          type: string
+          format: date
+          example: "2022-01-15"
+        end_date:
+          type: string
+          format: date
+          example: "2022-06-15"
+      required:
+        - id
+        - diagnostic
+        - treatment
+        - doctor
+      additionalProperties: false
+
+    MedicalVisitResponse:
+      type: object
+      description: Schema for a medical visit record.
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "ffffffff-gggg-hhhh-iiii-jjjjjjjjjjjj"
+        patient_id:
+          type: string
+          example: "INS123456"
+        establishment:
+          $ref: '#/components/schemas/EstablishmentResponse'
+        doctor:
+          $ref: '#/components/schemas/DoctorResponse'
+        visit_date:
+          type: string
+          format: date
+          example: "2022-02-20T00:00:00Z"
+        diagnostic_established:
+          type: string
+          example: "Common cold with mild fever"
+        treatment:
+          type: string
+          example: "Rest and hydration"
+        visit_summary:
+          type: string
+          example: "Patient presented with cold symptoms"
+        notes:
+          type: string
+          example: "Follow-up in one week if symptoms persist"
+        created_at:
+          type: string
+          format: date-time
+          example: "2022-02-20T10:30:00Z"
+        modified_at:
+          type: string
+          format: date-time
+          example: "2022-02-20T10:30:00Z"
+      required:
+        - id
+        - patient_id
+        - establishment
+        - doctor
+        - visit_summary
+      additionalProperties: false
+
+    DoctorResponse:
+      type: object
+      description: Schema for doctor details.
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "dddddddd-eeee-ffff-0000-111111111111"
+        first_name:
+          type: string
+          example: "Alice"
+        last_name:
+          type: string
+          example: "Brown"
+      required:
+        - id
+        - first_name
+        - last_name
+      additionalProperties: false
+
+    ParentResponse:
+      type: object
+      description: Schema for a parent relationship.
+      properties:
+        parent:
+          $ref: '#/components/schemas/UserResponse'
+      required:
+        - parent
+      additionalProperties: false
+
+    UserResponse:
+      type: object
+      description: Schema for user details.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+        login:
+          type: string
+          example: "parent1"
+        user_type:
+          type: string
+          example: "PATIENT"
+        first_name:
+          type: string
+          example: "Parent"
+        last_name:
+          type: string
+          example: "One"
+        phone_number:
+          type: string
+          example: "111-222-3333"
+        email:
+          type: string
+          format: email
+          example: "parent1@example.com"
+        created_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+        modified_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+      required:
+        - user_id
+        - login
+        - user_type
+        - first_name
+        - last_name
+        - phone_number
+        - email
+        - created_at
+        - modified_at
+      additionalProperties: false
+
+    ErrorResponse:
+      type: object
+      description: Schema for error responses.
+      properties:
+        error:
+          type: string
+          example: "Invalid foreign key reference."
+      required:
+        - error
+      additionalProperties: false
+
+    Login:
+      type: object
+      description: Schema for authenticating a user.
+      properties:
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+          description: User's email address.
+        password:
+          type: string
+          description: Plain text password. It will be hashed after submission.
+          example: "mysecretpassword"
+      required:
+        - email
+        - password
+      additionalProperties: false
+
+    UserCreate:
+      type: object
+      description: Schema for creating a new user.
+      properties:
+        login:
+          type: string
+          example: "johndoe"
+          description: Unique login identifier.
+        password:
+          type: string
+          description: Plain text password that will be hashed after submission.
+          example: "mysecretpassword"
+        user_type:
+          type: string
+          enum: ["ADMIN", "PATIENT", "DOCTOR", "HEALTHCARE PROFESSIONAL"]
+          example: "PATIENT"
+          description: Type of the user.
+        first_name:
+          type: string
+          example: "John"
+          description: User's first name.
+        last_name:
+          type: string
+          example: "Doe"
+          description: User's last name.
+        phone_number:
+          type: string
+          example: "123-456-7890"
+          description: User's phone number.
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+          description: User's email address.
+      required:
+        - login
+        - password
+        - user_type
+        - first_name
+        - last_name
+        - phone_number
+        - email
+      additionalProperties: false
+
+    UserCreateResponse:
+      type: object
+      description: Response schema for a newly created user.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          description: Unique identifier for the user.
+      required:
+        - user_id
+      additionalProperties: false
+
+    UserUpdate:
+      type: object
+      description: Schema for updating an existing user.
+      properties:
+        login:
+          type: string
+          example: "johndoe"
+          description: Updated login identifier.
+        first_name:
+          type: string
+          example: "John"
+          description: Updated first name.
+        last_name:
+          type: string
+          example: "Doe"
+          description: Updated last name.
+        phone_number:
+          type: string
+          example: "123-456-7890"
+          description: Updated phone number.
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+          description: Updated email address.
+      required:
+        - login
+        - first_name
+        - last_name
+        - phone_number
+        - email
+      additionalProperties: false
+
+    UserUpdateResponse:
+      type: object
+      description: Response schema for an updated user.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        login:
+          type: string
+          example: "johndoe"
+        user_type:
+          type: string
+          example: "PATIENT"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        phone_number:
+          type: string
+          example: "123-456-7890"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        created_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+      required:
+        - user_id
+        - login
+        - user_type
+        - first_name
+        - last_name
+        - phone_number
+        - email
+        - created_at
+      additionalProperties: false
+
+    DoctorListResponse:
+      type: object
+      description: Schema for a doctor in the doctors list.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "2d3cfc26-4958-4723-acf8-9799502c4d7d"
+        first_name:
+          type: string
+          example: "Alice"
+        last_name:
+          type: string
+          example: "Brown"
+        email:
+          type: string
+          format: email
+          example: "alice.brown@example.com"
+        phone_number:
+          type: string
+          example: "555-555-5555"
+      required:
+        - user_id
+        - first_name
+        - last_name
+        - email
+        - phone_number
+      additionalProperties: false
+
+    EstablishmentListResponse:
+      type: object
+      description: Schema for an establishment in the establishments list.
+      properties:
+        establishment_id:
+          type: string
+          format: uuid
+          example: "e1234567-89ab-cdef-0123-456789abcdef"
+        establishment_name:
+          type: string
+          example: "Central City Hospital"
+        created_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+      required:
+        - establishment_id
+        - establishment_name
+        - created_at
+      additionalProperties: false
+
+
+    CredentialsUpdate:
+      type: object
+      description: Schema for updating user credentials.
+      properties:
+        login:
+          type: string
+          example: "johndoe"
+          description: Updated login identifier.
+        password:
+          type: string
+          example: "MySecretPass123"
+          description: New password in plain text.
+      required:
+        - login
+        - password
+      additionalProperties: false
+    
+    CoordinateUpdateResponse:
+      type: object
+      description: Response schema for updated coordinates.
+      properties:
+        coordinate_id:
+          type: string
+          format: uuid
+          example: "11111111-2222-3333-4444-555555555555"
+        user_id:
+          type: string
+          format: uuid
+          example: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+        street_address:
+          type: string
+          example: "456 Updated St"
+        apartment:
+          type: string
+          example: "Suite 7C"
+          nullable: true
+        postal_code:
+          type: string
+          example: "54321"
+        city:
+          type: string
+          example: "New Town"
+        country:
+          type: string
+          example: "USA"
+      required:
+        - coordinate_id
+        - user_id
+        - street_address
+        - postal_code
+        - city
+        - country
+      additionalProperties: false
+
+    StatusResponse:
+      type: object
+      description: Simple status response.
+      properties:
+        status:
+          type: string
+          example: "success"
+      required:
+        - status
+      additionalProperties: false
+
+    ParentCreate:
+      type: object
+      description: Schema for creating a new parent user.
+      properties:
+        first_name:
+          type: string
+          example: "Alice"
+          description: Parent's first name.
+        last_name:
+          type: string
+          example: "Johnson"
+          description: Parent's last name.
+        phone_number:
+          type: string
+          example: "123-456-7890"
+          description: Parent's phone number.
+        email:
+          type: string
+          format: email
+          example: "alice@email.com"
+          description: Parent's email address.
+        gender:
+          type: string
+          example: "Female"
+          description: Parent's gender (optional).
+          nullable: true
+      required:
+        - first_name
+        - last_name
+        - phone_number
+        - email
+      additionalProperties: false
+
+    MFASetupResponse:
+      type: object
+      description: Response schema for MFA setup.
+      properties:
+        status:
+          type: string
+          example: "success"
+        secret:
+          type: string
+          example: "JBSWY3DPEHPK3PXP"
+        backup_codes:
+          type: array
+          items:
+            type: string
+          example: ["ABCD1234", "EFGH5678"]
+        provisioning_uri:
+          type: string
+          example: "otpauth://totp/MedicalAPI:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=MedicalAPI"
+      required:
+        - status
+
+    MFACodeRequest:
+      type: object
+      description: Request schema for MFA code verification.
+      properties:
+        code:
+          type: string
+          example: "123456"
+      required:
+        - code
+      
+    MFAStatusResponse:
+      type: object
+      description: Response schema for MFA status.
+      properties:
+        status:
+          type: string
+          example: "success"
+        mfa_configured:
+          type: boolean
+          example: true
+        mfa_enabled:
+          type: boolean
+          example: true
+        configured_at:
+          type: string
+          format: date-time
+          example: "2023-09-15T14:30:00Z"
+        last_modified:
+          type: string
+          format: date-time
+          example: "2023-09-15T14:35:00Z"
+      required:
+        - status
+        - mfa_configured
+        - mfa_enabled
+
+    LoginResponse:
+      type: object
+      description: Schema for login responses.
+      properties:
+        status:
+          type: string
+          example: "Success"
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        temp_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          type: object
+          properties:
+            user_id:
+              type: string
+              format: uuid
+              example: "99febb18-8a4c-40b6-942f-df3c60d522dd"
+            user_type:
+              type: string
+              example: "PATIENT"
+            name:
+              type: string
+              example: "John Doe"
+            medical_insurance_id:
+              type: string
+              example: "INS123456"
+            requires_mfa:
+              type: boolean
+              example: false
+      required:
+        - status
+
+    PatientVersionSnapshot:
+      type: object
+      description: A complete snapshot of a patient's record at a specific point in time.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        login:
+          type: string
+          example: "johndoe"
+        user_type:
+          type: string
+          example: "PATIENT"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        phone_number:
+          type: string
+          example: "123-456-7890"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        medical_insurance_id:
+          type: string
+          example: "INS123456"
+        gender:
+          type: string
+          example: "Male"
+        city_of_birth:
+          type: string
+          example: "Anytown"
+        date_of_birth:
+          type: string
+          format: date-time
+          example: "Sat, 15 Jul 1995 00:00:00 GMT"
+        created_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+        modified_at:
+          type: string
+          format: date-time
+          example: "Fri, 14 Feb 2025 09:33:35 GMT"
+        coordinates:
+          type: array
+          description: List of addresses at this point in time.
+          items:
+            $ref: '#/components/schemas/CoordinateResponse'
+        medical_history:
+          type: array
+          description: List of medical history records at this point in time.
+          items:
+            $ref: '#/components/schemas/MedicalHistoryResponse'
+        medical_visits:
+          type: array
+          description: List of medical visits at this point in time.
+          items:
+            $ref: '#/components/schemas/MedicalVisitResponse'
+        parents:
+          type: array
+          description: List of parent relationships at this point in time.
+          items:
+            $ref: '#/components/schemas/ParentResponse'
+        snapshot_timestamp:
+          type: string
+          format: date-time
+          example: "Sat, 22 Mar 2025 05:25:56 GMT"
+          description: The timestamp when this snapshot of the patient record was captured.
+      required:
+        - user_id
+        - login
+        - user_type
+        - first_name
+        - last_name
+        - phone_number
+        - email
+        - medical_insurance_id
+        - gender
+        - city_of_birth
+        - created_at
+        - modified_at
+        - coordinates
+        - medical_history
+        - medical_visits
+        - parents
+        - snapshot_timestamp
+
+    EmailPhoneUpdate:
+      type: object
+      description: Schema for updating a user's email and phone number.
+      properties:
+        phone_number:
+          type: string
+          example: "123-456-7890"
+          description: Updated phone number.
+        email:
+          type: string
+          format: email
+          example: "alice@email.com"
+          description: Updated email address.
+      required:
+        - phone_number
+        - email
+      additionalProperties: false

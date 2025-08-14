@@ -1,0 +1,14 @@
+[
+    {
+        "establishment_id": "e1234567-89ab-cdef-0123-456789abcdef",
+        "establishment_name": "Central City Hospital"
+    },
+    {
+        "establishment_id": "e2345678-89ab-cdef-0123-456789abcdef",
+        "establishment_name": "Westside Medical Center"
+    },
+    {
+        "establishment_id": "e3456789-89ab-cdef-0123-456789abcdef",
+        "establishment_name": "Eastgate Health Clinic"
+    }
+]

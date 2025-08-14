@@ -1,0 +1,74 @@
+[
+    {
+        "coordinate_id": "7e0baadd-3ed5-488d-8680-f9a76b0405c0",
+        "user_id": "99febb18-8a4c-40b6-942f-df3c60d522dd",
+        "street_address": "123 Main St",
+        "apartment": "Apt 4B",
+        "postal_code": "N1M 2M1",
+        "city": "Anytown",
+        "country": "CAN"
+    },
+    {
+        "coordinate_id": "c0bb1ab8-3192-410a-b36c-2ed01179d813",
+        "user_id": "99febb18-8a4c-40b6-942f-df3c60d522dd",
+        "street_address": "555 Maple Ave",
+        "apartment": "Floor 3",
+        "postal_code": "R0J 9H5",
+        "city": "Anytown",
+        "country": "CAN"
+    },
+    {
+        "coordinate_id": "eb53e746-a3b4-4836-88cb-0c18c8f70f82",
+        "user_id": "ddb5502d-9c7c-46ed-9a5d-a27a32d29fa3",
+        "street_address": "456 Elm St",
+        "apartment": null,
+        "postal_code": "V8L 4C4",
+        "city": "Othertown",
+        "country": "CAN"
+    },
+    {
+        "coordinate_id": "86bfd33f-7d39-40d8-9e20-cc47562ddbcb",
+        "user_id": "ddb5502d-9c7c-46ed-9a5d-a27a32d29fa3",
+        "street_address": "321 Pine St",
+        "apartment": null,
+        "postal_code": "K7H 7C6",
+        "city": "Newcity",
+        "country": "CAN"
+    },
+    {
+        "coordinate_id": "63199986-30b2-4440-892a-09f6371c3cac",
+        "user_id": "eb711323-52d6-40a8-b335-8b3e587ed009",
+        "street_address": "789 Oak St",
+        "apartment": "Suite 12",
+        "postal_code": "V8G 5P6",
+        "city": "Anycity",
+        "country": "CAN"
+    },
+    {
+        "coordinate_id": "43e66bea-18a9-4888-bf5d-9a043b519781",
+        "user_id": "eb711323-52d6-40a8-b335-8b3e587ed009",
+        "street_address": "654 Spruce St",
+        "apartment": null,
+        "postal_code": "E3L 7H3",
+        "city": "Oldcity",
+        "country": "CAN"
+    },
+    {
+        "coordinate_id": "b5f142cc-5594-402c-8d91-4c0aef98fc78",
+        "user_id": "8c81302b-bb91-4c7e-a17c-ac52c2b53f98",
+        "street_address": "987 Birch St",
+        "apartment": "Unit 5A",
+        "postal_code": "H3J 0S2",
+        "city": "Oldtown",
+        "country": "CAN"
+    },
+    {
+        "coordinate_id": "f7508eb2-8a86-461c-a129-21da91649c0e",
+        "user_id": "8c81302b-bb91-4c7e-a17c-ac52c2b53f98",
+        "street_address": "432 Cedar St",
+        "apartment": null,
+        "postal_code": "E8T 3B8",
+        "city": "Oldtown",
+        "country": "CAN"
+    }
+]

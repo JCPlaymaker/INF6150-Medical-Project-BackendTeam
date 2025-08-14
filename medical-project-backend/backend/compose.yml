@@ -1,0 +1,58 @@
+services:
+
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: ${INF6150_DATABASE_USER}
+      POSTGRES_PASSWORD: ${INF6150_DATABASE_PASSWORD}
+      POSTGRES_DB: ${INF6150_DATABASE_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${INF6150_DATABASE_USER} -d ${INF6150_DATABASE_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "${INF6150_DATABASE_PORT}:${INF6150_DATABASE_DOCKER_PORT}"
+
+  test-db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${INF6150_TEST_DATABASE_USER}
+      POSTGRES_PASSWORD: ${INF6150_TEST_DATABASE_PASSWORD}
+      POSTGRES_DB: ${INF6150_TEST_DATABASE_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${INF6150_TEST_DATABASE_USER} -d ${INF6150_TEST_DATABASE_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "${INF6150_TEST_DATABASE_PORT}:${INF6150_TEST_DATABASE_DOCKER_PORT}"
+
+  api:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "${INF6150_API_PORT}:8082"
+    environment:
+      - INF6150_DATABASE_USER=${INF6150_DATABASE_USER}
+      - INF6150_DATABASE_PASSWORD=${INF6150_DATABASE_PASSWORD}
+      - INF6150_DATABASE_NAME=${INF6150_DATABASE_NAME}
+      - INF6150_DATABASE_HOST=${INF6150_DATABASE_HOST}
+      - INF6150_DATABASE_PORT=${INF6150_DATABASE_PORT}
+      - INF6150_TEST_DATABASE_USER=${INF6150_TEST_DATABASE_USER}
+      - INF6150_TEST_DATABASE_PASSWORD=${INF6150_TEST_DATABASE_PASSWORD}
+      - INF6150_TEST_DATABASE_NAME=${INF6150_TEST_DATABASE_NAME}
+      - INF6150_TEST_DATABASE_HOST=${INF6150_TEST_DATABASE_HOST}
+      - INF6150_TEST_DATABASE_PORT=${INF6150_TEST_DATABASE_PORT}
+      - INF6150_API_PORT=${INF6150_API_PORT}
+      - FLASK_APP=app:app
+      - FLASK_RUN_HOST=0.0.0.0
+    depends_on:
+      db:
+        condition: service_healthy
+      test-db:
+        condition: service_healthy  

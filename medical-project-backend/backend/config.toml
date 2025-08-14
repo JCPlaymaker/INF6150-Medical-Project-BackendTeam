@@ -1,0 +1,6 @@
+[test_data]
+users = "data/users.json"
+coordinates = "data/coordinates.json"
+parents = "data/parents.json"
+medical_history = "data/medical_history.json"
+medical_visits = "data/medical_visits.json"

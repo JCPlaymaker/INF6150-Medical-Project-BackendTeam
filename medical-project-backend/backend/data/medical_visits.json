@@ -1,0 +1,112 @@
+[
+    {
+        "visit_id": "194400ed-b90d-4735-9fa2-73443c2e5700",
+        "patient_id": "INS123456",
+        "establishment_id": "e1234567-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "2d3cfc26-4958-4723-acf8-9799502c4d7d",
+        "visit_date": "2022-02-20",
+        "diagnostic_established": "Common cold with mild fever",
+        "treatment": "Rest, hydration, and over-the-counter pain relievers",
+        "visit_summary": "Patient presented with cold symptoms. Recommended home care and rest.",
+        "notes": "Follow-up in one week if symptoms persist"
+    },
+    {
+        "visit_id": "e0727161-0abb-4eb9-a7b7-3b05694bb9b0",
+        "patient_id": "INS123456",
+        "establishment_id": "e1234567-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "2d3cfc26-4958-4723-acf8-9799502c4d7d",
+        "visit_date": "2023-04-25",
+        "diagnostic_established": "Annual check-up",
+        "treatment": "None required",
+        "visit_summary": "Routine annual examination. All vitals normal.",
+        "notes": "Schedule next check-up in 12 months"
+    },
+    {
+        "visit_id": "243112ea-257a-4cb3-ba2d-27fa3e8f7746",
+        "patient_id": "INS654321",
+        "establishment_id": "e1234567-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "2d3cfc26-4958-4723-acf8-9799502c4d7d",
+        "visit_date": "2023-01-15",
+        "diagnostic_established": "Sprained ankle",
+        "treatment": "RICE protocol, ankle brace prescribed",
+        "visit_summary": "Patient injured ankle during sports activity. Mild sprain diagnosed.",
+        "notes": "Return in 2 weeks for follow-up"
+    },
+    {
+        "visit_id": "9478f449-69c7-4424-9a5c-668174f558c3",
+        "patient_id": "INS654321",
+        "establishment_id": "e2345678-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "2d3cfc26-4958-4723-acf8-9799502c4d7d",
+        "visit_date": "2023-05-18",
+        "diagnostic_established": "Seasonal allergies",
+        "treatment": "Antihistamine prescription",
+        "visit_summary": "Patient experiencing seasonal allergy symptoms.",
+        "notes": "Consider allergy testing if symptoms worsen"
+    },
+    {
+        "visit_id": "327be6a5-2c18-4b9d-9f67-b59e2a259486",
+        "patient_id": "INS654321",
+        "establishment_id": "e2345678-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "aa57295e-fa4f-4821-b04c-711ea0be487a",
+        "visit_date": "2023-08-22",
+        "diagnostic_established": "Migraine",
+        "treatment": "Prescribed migraine medication",
+        "visit_summary": "Patient reported severe headache with aura.",
+        "notes": "Track frequency of episodes"
+    },
+    {
+        "visit_id": "17c9c6f5-1792-4ac5-9863-d1e6bb15cded",
+        "patient_id": "INS789012",
+        "establishment_id": "e2345678-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "aa57295e-fa4f-4821-b04c-711ea0be487a",
+        "visit_date": "2023-06-25",
+        "diagnostic_established": "High blood pressure",
+        "treatment": "Lifestyle modifications recommended",
+        "visit_summary": "Routine check revealed elevated blood pressure.",
+        "notes": "Monthly BP monitoring advised"
+    },
+    {
+        "visit_id": "f3e6f5aa-80a8-4049-88e8-05940f5588c4",
+        "patient_id": "INS789012",
+        "establishment_id": "e2345678-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "aa57295e-fa4f-4821-b04c-711ea0be487a",
+        "visit_date": "2023-10-10",
+        "diagnostic_established": "Bronchitis",
+        "treatment": "Antibiotics prescribed",
+        "visit_summary": "Patient presented with persistent cough and fever.",
+        "notes": "Complete full course of antibiotics"
+    },
+    {
+        "visit_id": "ec768411-5d59-49bf-bc83-2da903701ec9",
+        "patient_id": "INS345678",
+        "establishment_id": "e3456789-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "aa57295e-fa4f-4821-b04c-711ea0be487a",
+        "visit_date": "2023-03-05",
+        "diagnostic_established": "Lower back pain",
+        "treatment": "Physical therapy referral",
+        "visit_summary": "Patient complaining of chronic lower back pain.",
+        "notes": "Schedule follow-up after PT sessions"
+    },
+    {
+        "visit_id": "935b4a18-c526-42c4-b21c-6eee4af0400e",
+        "patient_id": "INS345678",
+        "establishment_id": "e3456789-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "31870799-6214-4639-a6a8-412f8e3bb232",
+        "visit_date": "2023-07-20",
+        "diagnostic_established": "Sinus infection",
+        "treatment": "Antibiotics and nasal spray",
+        "visit_summary": "Patient has symptoms of acute sinusitis.",
+        "notes": "Return if symptoms don't improve in 7 days"
+    },
+    {
+        "visit_id": "b81eb913-ac9d-45ba-8d98-33ce58e01775",
+        "patient_id": "INS345678",
+        "establishment_id": "e3456789-89ab-cdef-0123-456789abcdef",
+        "doctor_id": "31870799-6214-4639-a6a8-412f8e3bb232",
+        "visit_date": "2023-11-30",
+        "diagnostic_established": "Routine vaccination",
+        "treatment": "Flu shot administered",
+        "visit_summary": "Annual flu vaccination given.",
+        "notes": "No adverse reactions observed"
+    }
+]
