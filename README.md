@@ -17,3 +17,5 @@ La décentralisation du système actuel entraine des difficultés de communicati
 Cela conduit à des délais dans le traitement, des erreurs de diagnostic, des parcours de soins inefficaces, ou des erreurs dans les dossiers des patients. 
 
 Les mises à jour des dossiers des patients, la sauvegarde des données et le suivi des performances sont également plus simples à réaliser.
+
+<img width="865" height="557" alt="image" src="https://github.com/user-attachments/assets/835fb05c-1cfc-4aa9-a176-0408c6558a49" />
